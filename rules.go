@@ -488,24 +488,20 @@ func init() {
 	// Date check the provided field is valid Date
 	AddCustomRule("date", func(field string, rule string, message string, value interface{}) error {
 		str := toString(value)
-
-		switch rule {
-		case "date:dd-mm-yyyy":
+		if rule == "date:dd-mm-yyyy" {
 			if !isDateDDMMYY(str) {
 				if message != "" {
 					return errors.New(message)
 				}
 				return fmt.Errorf("The %s field must be a valid date format. e.g: dd-mm-yyyy, dd/mm/yyyy etc", field)
 			}
-		default:
-			if !isDate(str) {
-				if message != "" {
-					return errors.New(message)
-				}
-				return fmt.Errorf("The %s field must be a valid date format. e.g: yyyy-mm-dd, yyyy/mm/dd etc", field)
-			}
 		}
-
+		if !isDate(str) {
+			if message != "" {
+				return errors.New(message)
+			}
+			return fmt.Errorf("The %s field must be a valid date format. e.g: yyyy-mm-dd, yyyy/mm/dd etc", field)
+		}
 		return nil
 	})
 
@@ -783,7 +779,7 @@ func init() {
 				if message != "" {
 					return errors.New(message)
 				}
-				return fmt.Errorf("The %s field must be maximum %d in size", field, lenInt)
+				return fmt.Errorf("The %s field must be minimum %d in size", field, lenInt)
 			}
 		case reflect.Int:
 			in := value.(int)
@@ -857,19 +853,6 @@ func init() {
 	})
 
 	// Numeric check if the value of the field is Numeric
-	AddCustomRule("mac_address", func(field string, rule string, message string, value interface{}) error {
-		str := toString(value)
-		err := fmt.Errorf("The %s field must be a valid Mac Address", field)
-		if message != "" {
-			err = errors.New(message)
-		}
-		if !isMacAddress(str) {
-			return err
-		}
-		return nil
-	})
-
-	// Numeric check if the value of the field is Numeric
 	AddCustomRule("numeric", func(field string, rule string, message string, value interface{}) error {
 		str := toString(value)
 		err := fmt.Errorf("The %s field must be numeric", field)
@@ -895,88 +878,88 @@ func init() {
 			panic(errInvalidArgument)
 		}
 
-		// check for integer value
-		min := math.MinInt64
-		if rng[0] != "" {
-			_min, err := strconv.ParseFloat(rng[0], 64)
-			if err != nil {
-				panic(errStringToInt)
+		// Check the type (if custom Int or custom Float64).
+		switch value.(type) {
+		case Int:
+			min := math.MinInt64
+			if rng[0] != "" {
+				_min, err := strconv.ParseFloat(rng[0], 64)
+				if err != nil {
+					panic(errStringToInt)
+				}
+				min = int(_min)
 			}
-			min = int(_min)
-		}
 
-		max := math.MaxInt64
-		if rng[1] != "" {
-			_max, err := strconv.ParseFloat(rng[1], 64)
-			if err != nil {
-				panic(errStringToInt)
+			max := math.MaxInt64
+			if rng[1] != "" {
+				_max, err := strconv.ParseFloat(rng[1], 64)
+				if err != nil {
+					panic(errStringToInt)
+				}
+				max = int(_max)
 			}
-			max = int(_max)
-		}
 
-		var errMsg error
-		switch {
-		case rng[0] == "":
-			errMsg = fmt.Errorf("The %s field value can not be greater than %d", field, max)
-		case rng[1] == "":
-			errMsg = fmt.Errorf("The %s field value can not be less than %d", field, min)
-		default:
-			errMsg = fmt.Errorf("The %s field must be numeric value between %d and %d", field, min, max)
-		}
+			var errMsg error
+			switch {
+			case rng[0] == "":
+				errMsg = fmt.Errorf("The %s field value can not be greater than %d", field, max)
+			case rng[1] == "":
+				errMsg = fmt.Errorf("The %s field value can not be less than %d", field, min)
+			default:
+				errMsg = fmt.Errorf("The %s field must be numeric value between %d and %d", field, min, max)
+			}
 
-		if message != "" {
-			errMsg = errors.New(message)
-		}
+			if message != "" {
+				errMsg = errors.New(message)
+			}
 
-		val := toString(value)
+			if !strings.Contains(rng[0], ".") && !strings.Contains(rng[1], ".") {
+				digit := value.(Int).Value
+				if !(digit >= min && digit <= max) {
+					return errMsg
+				}
+			}
+		case Float64:
+			minFloat := -math.MaxFloat64
+			if rng[0] != "" {
+				_minFloat, err := strconv.ParseFloat(rng[0], 64)
+				if err != nil {
+					panic(errStringToFloat)
+				}
+				minFloat = _minFloat
+			}
 
-		if !strings.Contains(rng[0], ".") || !strings.Contains(rng[1], ".") {
-			digit, errs := strconv.Atoi(val)
-			if errs != nil {
+			maxFloat := math.MaxFloat64
+			if rng[1] != "" {
+				_maxFloat, err := strconv.ParseFloat(rng[1], 64)
+				if err != nil {
+					panic(errStringToFloat)
+				}
+				maxFloat = _maxFloat
+			}
+
+			var errMsg error
+			switch {
+			case rng[0] == "":
+				errMsg = fmt.Errorf("The %s field value can not be greater than %f", field, maxFloat)
+			case rng[1] == "":
+				errMsg = fmt.Errorf("The %s field value can not be less than %f", field, minFloat)
+			default:
+				errMsg = fmt.Errorf("The %s field must be numeric value between %f and %f", field, minFloat, maxFloat)
+			}
+
+			if message != "" {
+				errMsg = errors.New(message)
+			}
+
+			digit := value.(Float64).Value
+			if !(digit >= minFloat && digit <= maxFloat) {
 				return errMsg
 			}
-			if !(digit >= min && digit <= max) {
-				return errMsg
-			}
-		}
-		// check for float value
-		var err error
-		minFloat := -math.MaxFloat64
-		if rng[0] != "" {
-			minFloat, err = strconv.ParseFloat(rng[0], 64)
-			if err != nil {
-				panic(errStringToFloat)
-			}
-		}
-
-		maxFloat := math.MaxFloat64
-		if rng[1] != "" {
-			maxFloat, err = strconv.ParseFloat(rng[1], 64)
-			if err != nil {
-				panic(errStringToFloat)
-			}
-		}
-
-		switch {
-		case rng[0] == "":
-			errMsg = fmt.Errorf("The %s field value can not be greater than %f", field, maxFloat)
-		case rng[1] == "":
-			errMsg = fmt.Errorf("The %s field value can not be less than %f", field, minFloat)
 		default:
-			errMsg = fmt.Errorf("The %s field must be numeric value between %f and %f", field, minFloat, maxFloat)
+			return errors.New("Cannot assert the type of value")
 		}
 
-		if message != "" {
-			errMsg = errors.New(message)
-		}
-
-		digit, err := strconv.ParseFloat(val, 64)
-		if err != nil {
-			return errMsg
-		}
-		if !(digit >= minFloat && digit <= maxFloat) {
-			return errMsg
-		}
 		return nil
 	})
 

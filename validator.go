@@ -117,9 +117,9 @@ func (v *Validator) Validate() url.Values {
 // and if the input data is empty for this field
 func (v *Validator) getNonRequiredFields() map[string]struct{} {
 	if v.Opts.FormSize > 0 {
-		_ = v.Opts.Request.ParseMultipartForm(v.Opts.FormSize)
+		v.Opts.Request.ParseMultipartForm(v.Opts.FormSize)
 	} else {
-		_ = v.Opts.Request.ParseMultipartForm(defaultFormSize)
+		v.Opts.Request.ParseMultipartForm(defaultFormSize)
 	}
 
 	inputs := v.Opts.Request.Form

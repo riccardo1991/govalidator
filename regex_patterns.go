@@ -39,10 +39,8 @@ const (
 	Latitude string = "^(\\+|-)?(?:90(?:(?:\\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\\.[0-9]{1,6})?))$"
 	// Longitude represents longitude regular expression
 	Longitude string = "^(\\+|-)?(?:180(?:(?:\\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\\.[0-9]{1,6})?))$"
-	// MacAddress represents regular expression for mac address
-	MacAddress string = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
 	// Numeric represents regular expression for numeric
-	Numeric string = "^-?[0-9]+$"
+	Numeric string = "^-?([0-9]*[.])?[0-9]+$"
 	// URL represents regular expression for url
 	URL string = "^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$" // Ref: https://stackoverflow.com/questions/136505/searching-for-uuids-in-text-with-regex
 	// UUID represents regular expression for UUID
@@ -68,7 +66,6 @@ var (
 	regexDigits       = regexp.MustCompile(Digits)
 	regexEmail        = regexp.MustCompile(Email)
 	regexFloat        = regexp.MustCompile(Float)
-	regexMacAddress   = regexp.MustCompile(MacAddress)
 	regexNumeric      = regexp.MustCompile(Numeric)
 	regexLatitude     = regexp.MustCompile(Latitude)
 	regexLongitude    = regexp.MustCompile(Longitude)

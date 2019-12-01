@@ -23,8 +23,8 @@ func buildMocFormReq() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, _ = io.Copy(part, file)
-	_ = file.Close()
+	io.Copy(part, file)
+	file.Close()
 	err = writer.Close()
 	if err != nil {
 		return nil, err
